@@ -1,4 +1,4 @@
-#version 330 core
+#version 460 core
 
 in vec2 FragPos;
 
@@ -9,22 +9,22 @@ uniform vec2 Z0;
 
 void main()
 {
-    vec2 res = Z0;
+    dvec2 res = Z0;
 
     for(int i = 0; i < maxIterations; i++)
     {
-        float x = res.x;
-        float y = res.y;
+        double x = res.x;
+        double y = res.y;
         res.x = x * x - y * y;
         res.y = 2 * x * y;
         res += FragPos;
 
-        float l = res.x * res.x + res.y * res.y;
+        double l = res.x * res.x + res.y * res.y;
         if(l > 4.0)
         {
-            float badness = sqrt((float(i) / maxIterations));
-            vec3 cl = vec3(1.0) - badness;
-            cl *= vec3(abs(res.x) / l, abs(res.y) / l, 1.0);
+            double badness = (double(i) / maxIterations);
+            dvec3 cl = dvec3(1.0) - badness;
+            cl *= dvec3(abs(res.x) / l, abs(res.y) / l, 1.0);
             FragColor = vec4(cl, 1.0);
             return;
         }
