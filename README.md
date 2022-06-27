@@ -11,3 +11,7 @@ Anyway:
  - Overall shittiness
  - Terrible precision even at relatively small zooms
  - No UI or way of changing parameters outside source code whatsoever
+
+## Imagery
+![image](img/zoomed_out.png)
+![image](img/zoomed_in.png)
