@@ -19,6 +19,8 @@ float qc[] = {
         2.56f, -1.44f
 };
 
+bool lastmousepress = false;
+glm::dvec2 lastmouse = glm::vec2(0.0);
 glm::dvec2 mouse = glm::dvec2(0.0);
 
 void mouse_callback(GLFWwindow* wnd, double xpos, double ypos)
@@ -28,6 +30,25 @@ void mouse_callback(GLFWwindow* wnd, double xpos, double ypos)
     glm::dvec2 uu = glm::dvec2(qc[10], qc[11]);
     glm::dvec2 ll = glm::dvec2(qc[12], qc[13]);
     mouse = ll + (uu - ll) * screenspace;
+
+    if(glfwGetMouseButton(wnd, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && !lastmousepress)
+    {
+        lastmousepress = true;
+        glm::dvec2 diff = lastmouse - mouse;
+        for(int i = 4; i < 8; i++)
+        {
+            qc[2 * i] += diff.x;
+            qc[2 * i + 1] += diff.y;
+        }
+    }
+    else if (lastmousepress)
+    {
+        lastmousepress = false;
+    }
+    else
+    {
+        lastmouse = mouse;
+    }
 }
 
 void mouse_scroll_callback(GLFWwindow* wnd, double xoffset, double yoffset)
@@ -63,6 +84,8 @@ GLFWwindow* init()
     }
     glfwMakeContextCurrent(window);
 
+    if (glfwRawMouseMotionSupported())
+        glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
     //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     //glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
