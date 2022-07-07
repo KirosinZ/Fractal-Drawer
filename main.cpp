@@ -6,69 +6,66 @@
 
 #include "program/shader.h"
 
+const float wnd_width = 1920.0f;
+const float wnd_height = 1080.0f;
+
 GLuint QVAO = 0;
 GLuint CVBO = 0;
 
-float qc[] = {
-        -1.0f, 1.0f,
-        1.0f, 1.0f,
-        -1.0f, -1.0f,
-        1.0f, -1.0f,
-        -2.56f, 1.44f,
-        2.56f, 1.44f,
-        -2.56f, -1.44f,
-        2.56f, -1.44f,
+float quad_coordinates[] = {
+        -1.0f, 1.0f, // NW corner
+        1.0f, 1.0f,  // NE corner
+        -1.0f, -1.0f,// SW corner
+        1.0f, -1.1f  // SE corner
 };
 
-double zoom = 1.0;
+float zoom = 1.0f;
+glm::vec2 pivot = glm::vec2(0.0f);
 
-bool lastmousepress = false;
 glm::dvec2 lastmouse = glm::vec2(0.0);
 glm::dvec2 mouse = glm::dvec2(0.0);
 
 void mouse_callback(GLFWwindow* wnd, double xpos, double ypos)
 {
-    glm::dvec2 screenspace = glm::dvec2((double)xpos, ypos) / glm::dvec2(2560.0, 1440.0);
-    screenspace.y = 1.0 - screenspace.y;
-    glm::dvec2 cuu = glm::dvec2(qc[10], qc[11]);
-    glm::dvec2 cll = glm::dvec2(qc[12], qc[13]);
-    mouse = cll + (cuu - cll) * screenspace;
+    glm::vec2 screenspace = glm::vec2(xpos / wnd_width - 0.5f, 0.5f - ypos / wnd_height);
+    screenspace.x *= wnd_width / wnd_height;
 
-    if(glfwGetMouseButton(wnd, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && !lastmousepress)
+    mouse = pivot + 2.0f * screenspace * zoom;
+
+    if(glfwGetMouseButton(wnd, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
     {
-        lastmousepress = true;
         glm::dvec2 diff = lastmouse - mouse;
-        for(int i = 4; i < 8; i++)
-        {
-            qc[2 * i] += diff.x;
-            qc[2 * i + 1] += diff.y;
-        }
+        pivot += diff;
+        mouse = lastmouse;
     }
-    else if (lastmousepress)
-    {
-        lastmousepress = false;
-    }
-    else
-    {
-        lastmouse = mouse;
-    }
+    lastmouse = mouse;
 }
 
 void mouse_scroll_callback(GLFWwindow* wnd, double xoffset, double yoffset)
 {
-    if ( yoffset > 0) zoom = 0.8;
-    else zoom = 1.0 / 0.8;
-
-    for(int i = 4; i < 8; i++)
-    {
-        qc[2 * i] = zoom * (qc[2 * i] - mouse.x) + mouse.x;
-        qc[2 * i + 1] = zoom * (qc[2 * i + 1] - mouse.y) + mouse.y;
-    }
+    float ampl = glm::pow(0.8, yoffset);
+    zoom *= ampl;
+    pivot = (glm::vec2)mouse + (pivot - (glm::vec2)mouse) * ampl;
 }
+
+bool tabheld = false;
+bool shoder = true;
+
+
 
 void keyboard(GLFWwindow* wnd)
 {
     if(glfwGetKey(wnd, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(wnd, GLFW_TRUE);
+
+    if(glfwGetKey(wnd, GLFW_KEY_TAB) == GLFW_PRESS && !tabheld)
+    {
+        tabheld = true;
+        shoder = !shoder;
+    }
+    else if (glfwGetKey(wnd, GLFW_KEY_TAB) == GLFW_RELEASE && tabheld)
+    {
+        tabheld = false;
+    }
 }
 
 GLFWwindow* init()
@@ -78,7 +75,7 @@ GLFWwindow* init()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(2560, 1440, "OpenGL", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(wnd_width, wnd_height, "OpenGL", nullptr, nullptr);
     if (window == nullptr)
     {
         std::cerr << "Window could not be opened." << std::endl;
@@ -96,7 +93,7 @@ GLFWwindow* init()
     glfwSetScrollCallback(window, mouse_scroll_callback);
 
     glewInit();
-    glViewport(0, 0, 2560, 1440);
+    glViewport(0, 0, wnd_width, wnd_height);
 
     //glfwMaximizeWindow(window);
 
@@ -110,7 +107,7 @@ int main() {
 
     glGenBuffers(1, &CVBO);
     glBindBuffer(GL_ARRAY_BUFFER, CVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(qc), qc, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quad_coordinates), quad_coordinates, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glGenVertexArrays(1, &QVAO);
@@ -118,16 +115,12 @@ int main() {
 
     glBindBuffer(GL_ARRAY_BUFFER, CVBO);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(8 * sizeof(float)));
-
     glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
 
     Shader s("../shaders/vert.vert", "../shaders/frag.frag");
-
-
+    Shader s1("../shaders/vert.vert", "../shaders/frag2.frag");
 
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     while(!glfwWindowShouldClose(wnd))
@@ -136,18 +129,14 @@ int main() {
 
         keyboard(wnd);
 
-        glBindBuffer(GL_ARRAY_BUFFER, CVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(qc), qc, GL_DYNAMIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        s.use();
-        s.setVec2("Z0", glm::vec2(0.0f));
-        s.setInt("maxIterations", 256);
+        (shoder ? s : s1).use();
+        s.setVec2("Z0", pivot);
+        s.setFloat("zoom", zoom);
+        s.setInt("maxIterations", 8000);
+        s.setFloat("aspect", wnd_width / wnd_height);
         glBindVertexArray(QVAO);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glBindVertexArray(0);
-
-        std::cout << zoom << std::endl;
 
         glfwSwapBuffers(wnd);
         glfwPollEvents();

@@ -31,6 +31,7 @@ public:
 
     void setFloats(const std::string &name, float val1, float val2) const;
     void setVec2(const std::string& name, glm::vec2 vec) const;
+    void setDVec2(const std::string &name, glm::dvec2 vec) const;
 
     void setFloats(const std::string &name, float val1, float val2, float val3) const;
     void setVec3(const std::string& name, glm::vec3 vec) const;

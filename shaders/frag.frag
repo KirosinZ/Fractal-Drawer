@@ -7,22 +7,26 @@ out vec4 FragColor;
 uniform int maxIterations;
 uniform vec2 Z0;
 
+uniform float zoom;
+
 void main()
 {
-    dvec2 res = Z0;
+    vec2 res = Z0 + FragPos * zoom;
+    vec2 C = Z0 + FragPos * zoom;
 
     for(int i = 0; i < maxIterations; i++)
     {
-        double x = res.x;
-        double y = res.y;
+        float x = res.x;
+        float y = res.y;
         res.x = x * x - y * y;
         res.y = 2 * x * y;
-        res += FragPos;
+        res += C;
 
-        double l = res.x * res.x + res.y * res.y;
+
+        float l = res.x * res.x + res.y * res.y;
         if(l > 4.0)
         {
-            double badness = (double(i) / maxIterations);
+            float badness = (float(i) / maxIterations);
             dvec3 cl = dvec3(1.0) - badness;
             cl *= dvec3(abs(res.x) / l, abs(res.y) / l, 1.0);
             FragColor = vec4(cl, 1.0);
