@@ -15,3 +15,7 @@ Anyway:
 ## Imagery
 ![image](img/zoomed_out.png)
 ![image](img/zoomed_in.png)
+
+#### And here is the precision drop
+
+![image](img/bad_zoom.png)
