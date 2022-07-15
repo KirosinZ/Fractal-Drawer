@@ -1,13 +1,13 @@
 #include <iostream>
 #include <iomanip>
 
-#include <gl/glew.h>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 #include "program/shader.h"
 
-const float wnd_width = 1920.0f;
-const float wnd_height = 1080.0f;
+const float wnd_width = 800.0f;//1920.0f;
+const float wnd_height = 600.0f;//1080.0f;
 
 GLuint QVAO = 0;
 GLuint CVBO = 0;
@@ -78,7 +78,9 @@ GLFWwindow* init()
     GLFWwindow* window = glfwCreateWindow(wnd_width, wnd_height, "OpenGL", nullptr, nullptr);
     if (window == nullptr)
     {
-        std::cerr << "Window could not be opened." << std::endl;
+        const char* err;
+        glfwGetError(&err);
+        std::cerr << "Window could not be opened: " << err << std::endl;
         glfwTerminate();
         return window;
     }
